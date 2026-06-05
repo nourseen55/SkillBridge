@@ -1,0 +1,6 @@
+@SkillBridge_HostAddress = http://localhost:5051
+
+GET {{SkillBridge_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

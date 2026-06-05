@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SkillBridge.Application/SkillBridge.Application.csproj" />
+  <Project Path="SkillBridge.Domain/SkillBridge.Domain.csproj" />
+  <Project Path="SkillBridge.Infrastructure/SkillBridge.Infrastructure.csproj" />
+  <Project Path="SkillBridge/SkillBridge.API.csproj" />
+</Solution>
