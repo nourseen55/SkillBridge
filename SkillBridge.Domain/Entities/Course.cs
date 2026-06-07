@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace SkillBridge.Domain.Entities;
 
-namespace SkillBridge.Domain.Entities;
-
-public class Course
+public class Course:BaseEntity
 {
-    public Guid Id { get; set; }
-    public string Title { get; set; }
+    public string Title { get; set; } = null!;
+    public string Description { get; set; } = null!;
+    public string ThumbnailUrl { get; set; } = null!;
 
-    public ICollection<Module> Modules { get; set; }
+    public ICollection<Module> Modules { get; set; }= new List<Module>();
 }

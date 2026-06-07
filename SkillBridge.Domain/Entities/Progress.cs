@@ -1,21 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SkillBridge.Domain.Entities
+﻿namespace SkillBridge.Domain.Entities
 {
-    public class Progress
+    public class Progress:BaseEntity
     {
-        public Guid Id { get; set; }
 
-        public Guid UserId { get; set; }
-        public AppUser User { get; set; }
-
-        public Guid CourseId { get; set; }
-        public Course Course { get; set; }
+        public string UserId { get; set; }
+        public int LessonId { get; set; }
+        public Lesson Lesson { get; set; } = null!;
         public double CompletionPercentage { get; set; }
         public double Score { get; set; }
+        public bool IsCompleted { get; set; }
+        public DateTime? CompletedAt { get; set; }
     }
 }

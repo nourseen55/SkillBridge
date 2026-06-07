@@ -1,37 +1,83 @@
-﻿
-using SkillBridge.Application.Interfaces.Repositories;
-using SkillBridge.Application.Interfaces.UnitOfWork;
-using SkillBridge.Infrastructure.Data;
-using SkillBridge.Infrastructure.Repos;
+﻿namespace SkillBridge.Infrastructure.UnitOfWork;
 
-namespace SkillBridge.Infrastructure.UnitOfWork
+public class UnitOfWork : IUnitOfWork
 {
-    public class UnitOfWork : IUnitOfWork
+    private readonly AppDbContext _context;
+    private readonly Dictionary<string, object> _repositories = new();
+
+    public UnitOfWork(AppDbContext context)
     {
-        private readonly AppDbContext _context;
-        private readonly Dictionary<string, object> _repositories = new();
+        _context = context;
+    }
 
-        public UnitOfWork(AppDbContext context)
+    public IGenericRepository<T> Repository<T>() where T : class
+    {
+        var type = typeof(T).Name;
+
+        if (!_repositories.ContainsKey(type))
         {
-            _context = context;
+            var repoInstance = new GenericRepository<T>(_context);
+            _repositories.Add(type, repoInstance);
         }
 
-        public IGenericRepository<T> Repository<T>() where T : class
-        {
-            var type = typeof(T).Name;
+        return (IGenericRepository<T>)_repositories[type];
+    }
+    public async Task<TResult> ExecuteInTransactionAsync<TResult>(Func<Task<TResult>> action)
+    {
+        var strategy = _context.Database.CreateExecutionStrategy();
 
-            if (!_repositories.ContainsKey(type))
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                var repoInstance = new GenericRepository<T>(_context);
-                _repositories.Add(type, repoInstance);
+                TResult result = await action();
+
+                if (result is bool booleanResult && !booleanResult)
+                {
+                    await transaction.RollbackAsync();
+                }
+                else
+                {
+                    await transaction.CommitAsync();
+                }
+
+                return result;
             }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        });
+    }
 
-            return (IGenericRepository<T>)_repositories[type];
-        }
-
-        public async Task<int> CompleteAsync()
+    public async Task<bool> ExecuteInTransactionAllContextAsync(Func<Task<bool>> action)
+    {
+        try
         {
-            return await _context.SaveChangesAsync();
+            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                var result = await action();
+
+                if (result)
+                    scope.Complete();
+
+                return result;
+            }
         }
+        catch
+        {
+            throw;
+        }
+    }
+    public async Task<int> CompleteAsync()
+    {
+        return await _context.SaveChangesAsync();
+    }
+    public void Dispose()
+    {
+        _context.Dispose();
     }
 }

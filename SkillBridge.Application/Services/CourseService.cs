@@ -22,12 +22,12 @@ namespace SkillBridge.Application.Services
                 Title = dto.Title
             };
 
-            await _unitOfWork.Repository<Course>().AddAsync(course);
+            await _unitOfWork.Repository<Course>().SaveAsync(course);
             await _unitOfWork.CompleteAsync();
         }
         public async Task<List<CourseDto>> GetAllCoursesAsync()
         {
-            var courses = await _unitOfWork.Repository<Course>().GetAllAsync();
+            var courses = await _unitOfWork.Repository<Course>().GetAllAsync(x=>true);
             return courses.Select(c => new CourseDto
             {
                 Id = c.Id,
