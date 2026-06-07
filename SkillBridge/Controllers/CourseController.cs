@@ -24,11 +24,16 @@ namespace SkillBridge.API.Controllers
             return Ok();
         }
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(int pageNumber = 1, int pageSize = 10)
         {
-            var result = await _courseService.GetAllCoursesAsync();
+            var result = await _courseService.GetAllCoursesAsync(pageNumber, pageSize);
             return Ok(result);
         }
 
+        [HttpGet("test-exception")]
+        public IActionResult TestException()
+        {
+            throw new Exception("Test Global Exception Handler");
+        }
     }
 }

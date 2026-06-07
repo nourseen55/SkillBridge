@@ -1,6 +1,4 @@
-﻿
-
-namespace SkillBridge.Infrastructure.Data
+﻿namespace SkillBridge.Infrastructure.Data
 {
     public class AppDbContext : IdentityDbContext<AppUser, IdentityRole, string>
     {
