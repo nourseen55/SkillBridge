@@ -1,61 +1,54 @@
+using SkillBridge.API.Extensions;
 
-using FluentValidation;
-using Microsoft.EntityFrameworkCore;
-using SkillBridge.API.Filters;
-using SkillBridge.API.Middlewares;
-using SkillBridge.Application.Interfaces.Services;
-using SkillBridge.Application.Interfaces.UnitOfWork;
-using SkillBridge.Application.Services;
-using SkillBridge.Application.Validators.Courses;
-using SkillBridge.Infrastructure.Data;
-using SkillBridge.Infrastructure.UnitOfWork;
+var builder = WebApplication.CreateBuilder(args);
 
-namespace SkillBridge
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
 {
-    public class Program
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
-        public static void Main(string[] args)
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Enter your JWT token here."
+    });
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
         {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
-
-            builder.Services.AddControllers(options =>
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
             {
-                options.Filters.Add<ValidationFilter>();
-            });   
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-            builder.Services.AddDbContext<AppDbContext>(options =>
-            {
-                options.UseSqlServer(
-                    builder.Configuration.GetConnectionString("DefaultConnection")
-                );
-            });
-            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            builder.Services.AddScoped<ICourseService, CourseService>();
-            builder.Services.AddValidatorsFromAssemblyContaining<CreateCourseDtoValidator>();
-
-            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-            var app = builder.Build();
-            app.UseExceptionHandler(_ => { });
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
-
-            app.MapControllers();
-
-            app.Run();
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
         }
-    }
+    });
+});
+
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplicationServices();
+builder.Services.AddJwtAuthentication(builder.Configuration);
+
+var app = builder.Build();
+
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+
+await app.SeedRolesAsync();
+
+app.Run();
